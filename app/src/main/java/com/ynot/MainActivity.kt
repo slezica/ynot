@@ -50,8 +50,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (!hasFocus) return
         if (viewModel.state.value.url.isNotEmpty()) return
 
         val clip = getSystemService(ClipboardManager::class.java)
