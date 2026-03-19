@@ -1,5 +1,7 @@
 package com.ynot
 
+import android.content.Context
+import android.media.MediaScannerConnection
 import android.os.Environment
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -51,7 +53,7 @@ class MainViewModel : ViewModel() {
     fun updateMediaMode(mode: MediaMode) = _state.update { it.copy(mediaMode = mode) }
     fun updateRemuxFormat(format: RemuxFormat) = _state.update { it.copy(remuxFormat = format) }
 
-    fun startDownload(cacheDir: File) {
+    fun startDownload(context: Context) {
         val current = _state.value
         if (current.url.isBlank() || current.isDownloading) return
 
@@ -67,7 +69,7 @@ class MainViewModel : ViewModel() {
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val request = buildRequest(current, cacheDir)
+                val request = buildRequest(current, context.cacheDir)
                 Log.i(tag, "Starting download: ${current.url}")
                 Log.i(tag, "Output dir: ${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath}")
 
@@ -87,6 +89,8 @@ class MainViewModel : ViewModel() {
                 Log.i(tag, "yt-dlp exit code: ${response.exitCode}")
                 Log.i(tag, "yt-dlp stdout:\n${response.out}")
                 Log.i(tag, "yt-dlp stderr:\n${response.err}")
+
+                scanDownloadsDir(context)
 
                 _state.update {
                     it.copy(
@@ -115,6 +119,17 @@ class MainViewModel : ViewModel() {
                 isDownloading = false,
                 statusLine = "Cancelled",
             )
+        }
+    }
+
+    private fun scanDownloadsDir(context: Context) {
+        val downloadsDir = Environment.getExternalStoragePublicDirectory(
+            Environment.DIRECTORY_DOWNLOADS
+        )
+        val files = downloadsDir.listFiles()?.map { it.absolutePath }?.toTypedArray() ?: return
+        Log.d(tag, "Scanning ${files.size} files in Downloads for MediaStore")
+        MediaScannerConnection.scanFile(context, files, null) { path, uri ->
+            Log.d(tag, "Scanned: $path -> $uri")
         }
     }
 

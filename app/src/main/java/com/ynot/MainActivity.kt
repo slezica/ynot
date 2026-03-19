@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
-            viewModel.startDownload(cacheDir)
+            viewModel.startDownload(this@MainActivity)
         }
     }
 
@@ -58,6 +58,6 @@ class MainActivity : ComponentActivity() {
                 return
             }
         }
-        viewModel.startDownload(cacheDir)
+        viewModel.startDownload(this@MainActivity)
     }
 }
