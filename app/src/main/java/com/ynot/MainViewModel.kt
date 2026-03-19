@@ -1,6 +1,7 @@
 package com.ynot
 
 import android.os.Environment
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yausername.youtubedl_android.YoutubeDL
@@ -43,6 +44,7 @@ class MainViewModel : ViewModel() {
     val state: StateFlow<DownloadState> = _state.asStateFlow()
 
     private val processId = "ynot-download"
+    private val tag = "Ynot"
 
     fun updateUrl(url: String) = _state.update { it.copy(url = url) }
     fun updateCookiesText(text: String) = _state.update { it.copy(cookiesText = text) }
@@ -66,8 +68,10 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val request = buildRequest(current, cacheDir)
+                Log.i(tag, "Starting download: ${current.url}")
+                Log.i(tag, "Output dir: ${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath}")
 
-                YoutubeDL.getInstance().execute(
+                val response = YoutubeDL.getInstance().execute(
                     request,
                     processId,
                 ) { progress, eta, line ->
@@ -80,6 +84,10 @@ class MainViewModel : ViewModel() {
                     }
                 }
 
+                Log.i(tag, "yt-dlp exit code: ${response.exitCode}")
+                Log.i(tag, "yt-dlp stdout:\n${response.out}")
+                Log.i(tag, "yt-dlp stderr:\n${response.err}")
+
                 _state.update {
                     it.copy(
                         isDownloading = false,
@@ -88,6 +96,7 @@ class MainViewModel : ViewModel() {
                     )
                 }
             } catch (e: Exception) {
+                Log.e(tag, "Download failed", e)
                 _state.update {
                     it.copy(
                         isDownloading = false,
@@ -113,6 +122,8 @@ class MainViewModel : ViewModel() {
         val downloadsDir = Environment.getExternalStoragePublicDirectory(
             Environment.DIRECTORY_DOWNLOADS
         ).absolutePath
+
+        Log.d(tag, "Downloads dir: $downloadsDir, exists=${File(downloadsDir).exists()}, writable=${File(downloadsDir).canWrite()}")
 
         return YoutubeDLRequest(state.url).apply {
             addOption("-o", "$downloadsDir/%(title).200B.%(ext)s")
