@@ -1,9 +1,11 @@
 package com.ynot
 
 import android.Manifest
+import android.content.ClipboardManager
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -45,6 +47,19 @@ class MainActivity : ComponentActivity() {
                     onCancel = viewModel::cancelDownload,
                 )
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (viewModel.state.value.url.isNotEmpty()) return
+
+        val clip = getSystemService(ClipboardManager::class.java)
+            ?.primaryClip?.getItemAt(0)?.text?.toString() ?: return
+
+        if (clip.startsWith("http://") || clip.startsWith("https://")) {
+            viewModel.updateUrl(clip)
+            Toast.makeText(this, "Pasted URL from clipboard", Toast.LENGTH_SHORT).show()
         }
     }
 
