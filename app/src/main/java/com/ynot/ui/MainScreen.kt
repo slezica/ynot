@@ -73,7 +73,6 @@ fun MainScreen(
                 value = state.url,
                 onValueChange = onUrlChange,
                 label = { Text("URL") },
-                placeholder = { Text("https://youtube.com/watch?v=...") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().focusRequester(urlFocusRequester),
                 enabled = !state.isDownloading,
