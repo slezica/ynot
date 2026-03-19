@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- "Y" letter centered in the safe zone (24-84) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M42,34 L54,54 L66,34 L72,34 L56,60 L56,76 L52,76 L52,60 L36,34 Z" />
+</vector>
