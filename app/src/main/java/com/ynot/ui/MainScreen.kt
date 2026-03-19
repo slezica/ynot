@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.foundation.verticalScroll
@@ -21,7 +23,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
@@ -61,11 +62,24 @@ fun MainScreen(
             TopAppBar(
                 title = { Text("Ynot") },
                 actions = {
-                    TextButton(
-                        onClick = onUpdate,
-                        enabled = !state.isDownloading && !state.isUpdating,
+                    var menuExpanded by remember { mutableStateOf(false) }
+
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "Menu")
+                    }
+
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false },
                     ) {
-                        Text(if (state.isUpdating) "Updating..." else "Update yt-dlp")
+                        DropdownMenuItem(
+                            text = { Text(if (state.isUpdating) "Updating..." else "Update yt-dlp") },
+                            onClick = {
+                                menuExpanded = false
+                                onUpdate()
+                            },
+                            enabled = !state.isDownloading && !state.isUpdating,
+                        )
                     }
                 },
             )
