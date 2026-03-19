@@ -2,6 +2,7 @@ package com.ynot
 
 import android.Manifest
 import android.content.ClipboardManager
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -29,9 +30,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val youtubeHosts = setOf(
+        "youtube.com", "www.youtube.com", "m.youtube.com",
+        "youtu.be", "music.youtube.com",
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        handleShareIntent(intent)
 
         setContent {
             YnotTheme {
@@ -49,6 +56,29 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleShareIntent(intent)
+    }
+
+    private fun handleShareIntent(intent: Intent) {
+        if (intent.action != Intent.ACTION_SEND) return
+        val text = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return
+
+        val url = text.lines()
+            .map { it.trim() }
+            .firstOrNull { line ->
+                try {
+                    val host = android.net.Uri.parse(line).host?.lowercase()
+                    host in youtubeHosts
+                } catch (_: Exception) {
+                    false
+                }
+            } ?: return
+
+        viewModel.updateUrl(url)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
