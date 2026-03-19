@@ -21,6 +21,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
@@ -53,10 +54,21 @@ fun MainScreen(
     onOutputFormatChange: (OutputFormat) -> Unit,
     onDownload: () -> Unit,
     onCancel: () -> Unit,
+    onUpdate: () -> Unit,
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Ynot") })
+            TopAppBar(
+                title = { Text("Ynot") },
+                actions = {
+                    TextButton(
+                        onClick = onUpdate,
+                        enabled = !state.isDownloading && !state.isUpdating,
+                    ) {
+                        Text(if (state.isUpdating) "Updating..." else "Update yt-dlp")
+                    }
+                },
+            )
         }
     ) { padding ->
         Column(

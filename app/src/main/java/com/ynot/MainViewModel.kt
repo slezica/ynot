@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yausername.youtubedl_android.YoutubeDL
+import com.yausername.youtubedl_android.YoutubeDL.UpdateChannel
 import com.yausername.youtubedl_android.YoutubeDLRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,6 +47,7 @@ data class DownloadState(
     val mediaMode: MediaMode = MediaMode.VIDEO,
     val outputFormat: OutputFormat = VideoFormat.NONE,
     val isDownloading: Boolean = false,
+    val isUpdating: Boolean = false,
     val progress: Float = 0f,
     val etaSeconds: Long = -1,
     val statusLine: String = "",
@@ -130,6 +132,36 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun updateYtDlp(context: Context) {
+        if (_state.value.isUpdating) return
+
+        _state.update { it.copy(isUpdating = true, error = null, statusLine = "Updating yt-dlp...") }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val status = YoutubeDL.getInstance().updateYoutubeDL(context, UpdateChannel.STABLE)
+                Log.i(tag, "yt-dlp update result: $status")
+                _state.update {
+                    it.copy(
+                        isUpdating = false,
+                        statusLine = when (status?.name) {
+                            "ALREADY_UP_TO_DATE" -> "yt-dlp is already up to date"
+                            else -> "yt-dlp updated successfully"
+                        },
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e(tag, "yt-dlp update failed", e)
+                _state.update {
+                    it.copy(
+                        isUpdating = false,
+                        error = "Update failed: ${e.message}",
+                    )
+                }
+            }
+        }
+    }
+
     fun cancelDownload() {
         YoutubeDL.getInstance().destroyProcessById(processId)
         _state.update {
@@ -161,6 +193,7 @@ class MainViewModel : ViewModel() {
         return YoutubeDLRequest(state.url).apply {
             addOption("-o", "$downloadsDir/%(title).200B.%(ext)s")
             addOption("--no-mtime")
+            addOption("--no-update")
 
             when (state.mediaMode) {
                 MediaMode.VIDEO -> {

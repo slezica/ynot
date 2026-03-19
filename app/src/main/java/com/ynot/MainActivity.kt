@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity() {
                     onOutputFormatChange = viewModel::updateOutputFormat,
                     onDownload = ::onDownloadRequested,
                     onCancel = viewModel::cancelDownload,
+                    onUpdate = { viewModel.updateYtDlp(this@MainActivity) },
                 )
             }
         }
