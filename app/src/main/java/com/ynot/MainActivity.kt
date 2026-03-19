@@ -1,0 +1,63 @@
+package com.ynot
+
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.core.content.ContextCompat
+import com.ynot.ui.MainScreen
+import com.ynot.ui.theme.YnotTheme
+
+class MainActivity : ComponentActivity() {
+
+    private val viewModel: MainViewModel by viewModels()
+
+    private val storagePermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            viewModel.startDownload(cacheDir)
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+
+        setContent {
+            YnotTheme {
+                val state by viewModel.state.collectAsState()
+
+                MainScreen(
+                    state = state,
+                    onUrlChange = viewModel::updateUrl,
+                    onCookiesChange = viewModel::updateCookiesText,
+                    onMediaModeChange = viewModel::updateMediaMode,
+                    onRemuxFormatChange = viewModel::updateRemuxFormat,
+                    onDownload = ::onDownloadRequested,
+                    onCancel = viewModel::cancelDownload,
+                )
+            }
+        }
+    }
+
+    private fun onDownloadRequested() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(
+                    this, Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                storagePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                return
+            }
+        }
+        viewModel.startDownload(cacheDir)
+    }
+}
