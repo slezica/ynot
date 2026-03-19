@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -70,6 +69,28 @@ fun MainScreen(
                 enabled = !state.isDownloading,
             )
 
+            DropdownSelector(
+                label = "Mode",
+                selected = state.mediaMode.label,
+                options = MediaMode.entries.map { it.label },
+                onSelect = { label ->
+                    MediaMode.entries.first { it.label == label }.let(onMediaModeChange)
+                },
+                enabled = !state.isDownloading,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            DropdownSelector(
+                label = "Remux",
+                selected = state.remuxFormat.label,
+                options = RemuxFormat.entries.map { it.label },
+                onSelect = { label ->
+                    RemuxFormat.entries.first { it.label == label }.let(onRemuxFormatChange)
+                },
+                enabled = !state.isDownloading,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
             OutlinedTextField(
                 value = state.cookiesText,
                 onValueChange = onCookiesChange,
@@ -80,35 +101,6 @@ fun MainScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isDownloading,
             )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                DropdownSelector(
-                    label = "Mode",
-                    selected = state.mediaMode.label,
-                    options = MediaMode.entries.map { it.label },
-                    onSelect = { label ->
-                        MediaMode.entries.first { it.label == label }.let(onMediaModeChange)
-                    },
-                    enabled = !state.isDownloading,
-                    modifier = Modifier.weight(1f),
-                )
-
-                DropdownSelector(
-                    label = "Remux",
-                    selected = state.remuxFormat.label,
-                    options = RemuxFormat.entries.map { it.label },
-                    onSelect = { label ->
-                        RemuxFormat.entries.first { it.label == label }.let(onRemuxFormatChange)
-                    },
-                    enabled = !state.isDownloading,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-
-            Spacer(Modifier.height(4.dp))
 
             if (state.isDownloading) {
                 Button(
