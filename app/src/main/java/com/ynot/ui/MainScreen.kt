@@ -31,9 +31,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.ynot.AudioFormat
 import com.ynot.DownloadState
 import com.ynot.MediaMode
-import com.ynot.RemuxFormat
+import com.ynot.OutputFormat
+import com.ynot.VideoFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,7 +44,7 @@ fun MainScreen(
     onUrlChange: (String) -> Unit,
     onCookiesChange: (String) -> Unit,
     onMediaModeChange: (MediaMode) -> Unit,
-    onRemuxFormatChange: (RemuxFormat) -> Unit,
+    onOutputFormatChange: (OutputFormat) -> Unit,
     onDownload: () -> Unit,
     onCancel: () -> Unit,
 ) {
@@ -80,16 +82,23 @@ fun MainScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            DropdownSelector(
-                label = "Remux",
-                selected = state.remuxFormat.label,
-                options = RemuxFormat.entries.map { it.label },
-                onSelect = { label ->
-                    RemuxFormat.entries.first { it.label == label }.let(onRemuxFormatChange)
-                },
-                enabled = !state.isDownloading,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            run {
+                val formatOptions: List<OutputFormat> = when (state.mediaMode) {
+                    MediaMode.VIDEO -> VideoFormat.entries
+                    MediaMode.AUDIO_ONLY -> AudioFormat.entries
+                }
+
+                DropdownSelector(
+                    label = "Format",
+                    selected = state.outputFormat.label,
+                    options = formatOptions.map { it.label },
+                    onSelect = { label ->
+                        formatOptions.first { it.label == label }.let(onOutputFormatChange)
+                    },
+                    enabled = !state.isDownloading,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
 
             OutlinedTextField(
                 value = state.cookiesText,

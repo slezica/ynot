@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
                     onUrlChange = viewModel::updateUrl,
                     onCookiesChange = viewModel::updateCookiesText,
                     onMediaModeChange = viewModel::updateMediaMode,
-                    onRemuxFormatChange = viewModel::updateRemuxFormat,
+                    onOutputFormatChange = viewModel::updateOutputFormat,
                     onDownload = ::onDownloadRequested,
                     onCancel = viewModel::cancelDownload,
                 )

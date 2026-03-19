@@ -21,18 +21,30 @@ enum class MediaMode(val label: String) {
     AUDIO_ONLY("Audio only"),
 }
 
-enum class RemuxFormat(val label: String, val value: String?) {
+interface OutputFormat {
+    val label: String
+    val value: String?
+}
+
+enum class VideoFormat(override val label: String, override val value: String?) : OutputFormat {
     NONE("None (original)", null),
     MP4("MP4", "mp4"),
     MKV("MKV", "mkv"),
     WEBM("WebM", "webm"),
 }
 
+enum class AudioFormat(override val label: String, override val value: String?) : OutputFormat {
+    MP3("MP3", "mp3"),
+    M4A("M4A", "m4a"),
+    OPUS("Opus", "opus"),
+    FLAC("FLAC", "flac"),
+}
+
 data class DownloadState(
     val url: String = "",
     val cookiesText: String = "",
     val mediaMode: MediaMode = MediaMode.VIDEO,
-    val remuxFormat: RemuxFormat = RemuxFormat.NONE,
+    val outputFormat: OutputFormat = VideoFormat.NONE,
     val isDownloading: Boolean = false,
     val progress: Float = 0f,
     val etaSeconds: Long = -1,
@@ -50,8 +62,14 @@ class MainViewModel : ViewModel() {
 
     fun updateUrl(url: String) = _state.update { it.copy(url = url) }
     fun updateCookiesText(text: String) = _state.update { it.copy(cookiesText = text) }
-    fun updateMediaMode(mode: MediaMode) = _state.update { it.copy(mediaMode = mode) }
-    fun updateRemuxFormat(format: RemuxFormat) = _state.update { it.copy(remuxFormat = format) }
+    fun updateMediaMode(mode: MediaMode) = _state.update {
+        val defaultFormat: OutputFormat = when (mode) {
+            MediaMode.VIDEO -> VideoFormat.NONE
+            MediaMode.AUDIO_ONLY -> AudioFormat.MP3
+        }
+        it.copy(mediaMode = mode, outputFormat = defaultFormat)
+    }
+    fun updateOutputFormat(format: OutputFormat) = _state.update { it.copy(outputFormat = format) }
 
     fun startDownload(context: Context) {
         val current = _state.value
@@ -147,15 +165,15 @@ class MainViewModel : ViewModel() {
             when (state.mediaMode) {
                 MediaMode.VIDEO -> {
                     addOption("-f", "bestvideo+bestaudio/best")
+                    (state.outputFormat as? VideoFormat)?.value?.let { format ->
+                        addOption("--remux-video", format)
+                    }
                 }
                 MediaMode.AUDIO_ONLY -> {
                     addOption("-x")
-                    addOption("--audio-format", "mp3")
+                    val audioFormat = (state.outputFormat as? AudioFormat)?.value ?: "mp3"
+                    addOption("--audio-format", audioFormat)
                 }
-            }
-
-            state.remuxFormat.value?.let { format ->
-                addOption("--remux-video", format)
             }
 
             if (state.cookiesText.isNotBlank()) {
