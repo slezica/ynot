@@ -9,6 +9,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -29,6 +33,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ynot.AudioFormat
@@ -61,14 +67,26 @@ fun MainScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            val urlFocusRequester = remember { FocusRequester() }
+
             OutlinedTextField(
                 value = state.url,
                 onValueChange = onUrlChange,
                 label = { Text("URL") },
                 placeholder = { Text("https://youtube.com/watch?v=...") },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().focusRequester(urlFocusRequester),
                 enabled = !state.isDownloading,
+                trailingIcon = {
+                    if (state.url.isNotEmpty()) {
+                        IconButton(onClick = {
+                            onUrlChange("")
+                            urlFocusRequester.requestFocus()
+                        }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Clear")
+                        }
+                    }
+                },
             )
 
             DropdownSelector(
